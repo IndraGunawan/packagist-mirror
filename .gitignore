@@ -1,0 +1,5 @@
+/vendor/
+/cache/
+/public/*
+!/public/index.html
+.php_cs.cache
