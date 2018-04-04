@@ -31,15 +31,12 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 final class Application extends BaseApplication
 {
-    const APP_NAME = '';
-    const APP_VERSION = '';
-
     private $projectDir = null;
     private $io;
 
     public function __construct()
     {
-        parent::__construct(self::APP_NAME, self::APP_VERSION);
+        parent::__construct('Packagist Mirror');
     }
 
     /**

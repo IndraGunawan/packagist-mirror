@@ -40,15 +40,28 @@ final class DumpMetadataCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if (!$this->lock()) {
+        $this->getIO()->writeInfo(sprintf('Start time       : %s', date('c')));
+        if (!$this->lock($this->getName().'::dump')) {
             $this->getIO()->writeError('The command is already running in another process.');
 
             return 0;
         }
 
+        ini_set('memory_limit', '-1');
         gc_enable();
 
         $repository = new Repository('https://packagist.org', $this->getIO());
+        // dump and symlink packages metadata
         $this->dumper->dump($repository);
+
+        // release lock for dump
+        $this->release();
+
+        // lock to remove old files
+        if ($this->lock($this->getName().'::removeOldFiles')) {
+            $this->dumper->removeOldFiles($repository);
+
+            $this->release();
+        }
     }
 }

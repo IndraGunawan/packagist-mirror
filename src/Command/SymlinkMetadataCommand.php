@@ -11,18 +11,14 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use Amp\File;
+use Amp\Promise;
 use Amp\Success;
 use App\IO\IOInterface;
 use Symfony\Component\Console\Command\LockableTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use function Amp\call;
-use function Amp\File\get;
-use function Amp\File\isfile;
-use function Amp\File\link;
-use function Amp\File\symlink;
-use function Amp\File\unlink;
-use function Amp\Promise\wait;
 
 /**
  * @author Indra Gunawan <hello@indra.my.id>
@@ -55,11 +51,11 @@ final class SymlinkMetadataCommand extends Command
             return 0;
         }
 
-        wait(call(function (IOInterface $io, string $buildDir, string $publicDir) {
+        Promise\wait(call(function (IOInterface $io, string $buildDir, string $publicDir) {
             $dir = null;
-            $file = yield isfile($buildDir.'/BUILD_DIR');
+            $file = yield File\isfile($buildDir.'/BUILD_DIR');
             if (true === $file) {
-                $dir = yield get($buildDir.'/BUILD_DIR');
+                $dir = yield File\get($buildDir.'/BUILD_DIR');
             }
 
             if (null === $dir) {
@@ -70,13 +66,19 @@ final class SymlinkMetadataCommand extends Command
             $buildDir .= '/'.preg_replace('/[^0-9A-Za-z]*/', '', $dir);
 
             // symlink packages.json file to public
-            yield unlink($publicDir.'/packages.json');
-            yield link($buildDir.'/packages.json', $publicDir.'/packages.json');
-            $io->writeInfo('Creating symlinks for packages.json');
+            if (true === yield File\isfile($buildDir.'/packages.json')) {
+                $io->writeInfo('Creating symlinks for packages.json');
+                yield File\unlink($publicDir.'/packages.json');
+                yield File\link($buildDir.'/packages.json', $publicDir.'/packages.json');
+            }
 
-            yield unlink($publicDir.'/p');
-            yield link($buildDir.'/p', $publicDir.'/p');
-            $io->writeinfo('creating symlinks for provider directory');
+            if (true === yield File\isdir($buildDir.'/p')) {
+                $io->writeinfo('creating symlinks for provider directory');
+                yield File\unlink($publicDir.'/p');
+                yield File\link($buildDir.'/p', $publicDir.'/p');
+            }
         }, $this->getIO(), $this->buildDir, $this->publicDir));
+
+        $this->release();
     }
 }
