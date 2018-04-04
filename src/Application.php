@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\IO\ConsoleIO;
+use App\IO\IOInterface;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\Application as BaseApplication;
@@ -17,19 +19,32 @@ use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\Filesystem\Filesystem;
 
+/**
+ * @author Indra Gunawan <hello@indra.my.id>
+ */
 final class Application extends BaseApplication
 {
     const APP_NAME = '';
     const APP_VERSION = '';
 
     private $projectDir = null;
+    private $io;
 
     public function __construct()
     {
         parent::__construct(self::APP_NAME, self::APP_VERSION);
+    }
 
-        $inputDefinition = $this->getDefinition();
-        $inputDefinition->addOption(new InputOption('debug', null, InputOption::VALUE_NONE, 'Switches on debug mode.'));
+    /**
+     * {@inheritdoc}
+     */
+    protected function getDefaultInputDefinition()
+    {
+        $definition = parent::getDefaultInputDefinition();
+        $definition->addOption(new InputOption('debug', null, InputOption::VALUE_NONE, 'Switches on debug mode'));
+        $definition->addOption(new InputOption('profile', null, InputOption::VALUE_NONE, 'Display timing and memory usage information'));
+
+        return $definition;
     }
 
     /**
@@ -37,13 +52,27 @@ final class Application extends BaseApplication
      */
     public function doRun(InputInterface $input, OutputInterface $output)
     {
+        // init container
         $container = $this->getContainer($input->hasParameterOption('--debug'));
-
         if ($container->has('console.command_loader')) {
             $this->setCommandLoader($container->get('console.command_loader'));
         }
 
-        parent::doRun($input, $output);
+        // set IO
+        $this->io = new ConsoleIO($output);
+
+        if ($input->hasParameterOption('--profile')) {
+            $startTime = microtime(true);
+            $this->io->enableDebugging($startTime);
+        }
+
+        $result = parent::doRun($input, $output);
+
+        if (isset($startTime)) {
+            $this->io->writeInfo('Memory usage: '.round(memory_get_usage() / 1024 / 1024, 2).'MB (peak: '.round(memory_get_peak_usage() / 1024 / 1024, 2).'MB), time: '.round(microtime(true) - $startTime, 2).'s');
+        }
+
+        return $result;
     }
 
     /**
@@ -137,5 +166,10 @@ final class Application extends BaseApplication
         }
 
         return $this->projectDir;
+    }
+
+    public function getIO(): IOInterface
+    {
+        return $this->io;
     }
 }

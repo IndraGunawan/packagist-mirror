@@ -1,5 +1,6 @@
 /vendor/
 /cache/
+/build/
 /public/*
 !/public/index.html
 .php_cs.cache
