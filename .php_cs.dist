@@ -1,5 +1,12 @@
 <?php
 
+$header = <<<EOF
+This file is part of IndraGunawan/packagist-mirror.
+(c) Indra Gunawan <hello@indra.my.id>
+For the full copyright and license information, please view the LICENSE
+file that was distributed with this source code.
+EOF;
+
 return PhpCsFixer\Config::create()
     ->setRiskyAllowed(true)
     ->setRules([
@@ -8,7 +15,7 @@ return PhpCsFixer\Config::create()
         'array_syntax' => ['syntax' => 'short'],
         'combine_consecutive_unsets' => true,
         'general_phpdoc_annotation_remove' => ['expectedException', 'expectedExceptionMessage', 'expectedExceptionMessageRegExp'],
-        // 'header_comment' => ['header' => $header],
+        'header_comment' => ['header' => $header],
         'declare_strict_types' => true,
         'no_extra_consecutive_blank_lines' => ['break', 'continue', 'extra', 'return', 'throw', 'use', 'parenthesis_brace_block', 'square_brace_block', 'curly_brace_block'],
         'ordered_imports' => true,

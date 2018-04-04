@@ -2,8 +2,16 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of IndraGunawan/packagist-mirror.
+ * (c) Indra Gunawan <hello@indra.my.id>
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace App\Repository;
 
+use Amp\File\FilesystemException;
 use Amp\Promise;
 use Amp\Success;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -12,8 +20,13 @@ use function Amp\call;
 use function Amp\File\exists;
 use function Amp\File\get;
 use function Amp\File\isdir;
+use function Amp\File\isfile;
 use function Amp\File\mkdir;
 use function Amp\File\put;
+use function Amp\File\readlink;
+use function Amp\File\rmdir;
+use function Amp\File\symlink;
+use function Amp\File\unlink;
 use function Amp\Promise\all;
 use function Amp\Promise\wait;
 
@@ -34,9 +47,19 @@ final class Dumper
     public function dump(Repository $repository)
     {
         $currentBuildDir = date('Ymd');
+        $cacheBuildDir = wait(call(function (string $buildDir) {
+            $file = yield isfile($buildDir.'/BUILD_DIR');
+            if (true === $file) {
+                return yield get($buildDir.'/BUILD_DIR');
+            }
+
+            return new Success(null);
+        }, $this->buildDir));
+
+        $cacheBuildDir = $cacheBuildDir ?: $currentBuildDir;
 
         $repository->setOutputDir($this->buildDir.'/'.$currentBuildDir);
-        $repository->setCacheDir($this->buildDir.'/'.$currentBuildDir);
+        $repository->setCacheDir($this->buildDir.'/'.$cacheBuildDir);
 
         $repository->getIO()->writeInfo(sprintf('Dump packages from %s', $repository->getUrl()));
 
@@ -55,6 +78,55 @@ final class Dumper
         foreach ($providers as $name => $provider) {
             $repository->getIO()->writeInfo(sprintf('Downloading packages from %s provider', $name));
             $this->downloadProviderListings($repository, collect($this->json_decode($provider, true)));
+        }
+
+        wait(call(function (Repository $repository) {
+            // prepare main packages.json
+            $rootFile = $repository->getPackagesData()->toArray();
+            if (isset($rootFile['notify'])) {
+                $rootFile['notify'] = $repository->getRootFileDataUrl($rootFile['notify']);
+            }
+            if (isset($rootFile['notify-batch'])) {
+                $rootFile['notify-batch'] = $repository->getRootFileDataUrl($rootFile['notify-batch']);
+            }
+            if (isset($rootFile['search'])) {
+                $rootFile['search'] = $repository->getRootFileDataUrl($rootFile['search']);
+            }
+
+            yield put($repository->getOutputFilePath('packages.json'), $this->json_encode($rootFile));
+
+            // symlink packages.json file to public
+            $exists = yield isfile($this->publicDir.'/packages.json');
+            if (true === $exists) {
+                yield unlink($this->publicDir.'/packages.json');
+            }
+            yield symlink($repository->getOutputFilePath('packages.json'), $this->publicDir.'/packages.json');
+            $repository->getIO()->writeInfo('Creating symlinks for packages.json');
+
+            // symlink provider directory to public
+            $exist = yield isdir($this->publicDir.'/p');
+            $link = null;
+            try {
+                $link = yield readlink($this->publicDir.'/p');
+            } catch (FilesystemException $e) {
+                // do nothing
+            }
+            if ($link !== $repository->getOutputFilePath('p')) {
+                if (null === $link && true === $exist) {
+                    yield rmdir($this->publicDir.'/p');
+                }
+                yield symlink($repository->getOutputFilePath('p'), $this->publicDir.'/p');
+                $repository->getio()->writeinfo('creating symlinks for provider directory');
+
+                yield rmdir($repository->getCacheDir());
+                $repository->getio()->writeinfo('removing provider directory '.$repository->getCacheDir());
+            }
+        }, $repository));
+
+        if ($repository->getOutputDir() !== $repository->getCacheDir()) {
+            wait(call(function (string $buildDir, string $buildDirValue) {
+                yield put($buildDir.'/BUILD_DIR', $buildDirValue);
+            }, $this->buildDir, $currentBuildDir));
         }
     }
 
@@ -91,13 +163,17 @@ final class Dumper
             // if file already exists then use the cached file
             $exists = yield exists($repository->getCacheFilePath($filename));
             if ($exists) {
-                if (false === $loadFromCache) {
+                if (false === $loadFromCache && $repository->getOutputDir() === $repository->getCacheDir()) {
                     return new Success('{}');
                 }
 
                 $repository->getIO()->writeComment(sprintf(' - Reading %s from cache', $filename), true, OutputInterface::VERBOSITY_DEBUG);
 
-                return yield get($repository->getCacheFilePath($filename));
+                $content = yield get($repository->getCacheFilePath($filename));
+                yield put($repository->getOutputFilePath($filename), $content);
+                yield unlink($repository->getCacheFilePath($filename));
+
+                return $content;
             }
 
             $response = yield $repository->getHttpClient()->request($repository->getBaseUrl().'/'.$filename);

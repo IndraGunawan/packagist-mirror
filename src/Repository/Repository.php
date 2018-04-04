@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of IndraGunawan/packagist-mirror.
+ * (c) Indra Gunawan <hello@indra.my.id>
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace App\Repository;
 
 use Amp\Artax\Client;
@@ -122,6 +129,15 @@ final class Repository
         }
 
         return $this->baseUrl.'/packages.json';
+    }
+
+    public function getRootFileDataUrl($data): string
+    {
+        if (0 === strpos($data, '/')) {
+            return $this->baseUrl.$data;
+        }
+
+        return $data;
     }
 
     /**
