@@ -21,6 +21,7 @@ use function Amp\File\exists;
 use function Amp\File\get;
 use function Amp\File\isdir;
 use function Amp\File\isfile;
+use function Amp\File\link;
 use function Amp\File\mkdir;
 use function Amp\File\put;
 use function Amp\File\readlink;
@@ -55,11 +56,15 @@ final class Dumper
 
             return new Success(null);
         }, $this->buildDir));
+        $cacheBuildDir = preg_replace('/[^0-9A-Za-z]*/', '', $cacheBuildDir);
 
         $cacheBuildDir = $cacheBuildDir ?: $currentBuildDir;
 
         $repository->setOutputDir($this->buildDir.'/'.$currentBuildDir);
         $repository->setCacheDir($this->buildDir.'/'.$cacheBuildDir);
+
+        $repository->getIO()->writeInfo(sprintf('Output Directory : %s', $repository->getOutputDir()));
+        $repository->getIO()->writeInfo(sprintf('Cache Directory  : %s', $repository->getCacheDir()));
 
         $repository->getIO()->writeInfo(sprintf('Dump packages from %s', $repository->getUrl()));
 
@@ -75,10 +80,10 @@ final class Dumper
         $repository->setPackagesData($this->json_decode(wait($request), true));
 
         $providers = $this->downloadProviderListings($repository, $repository->getPackagesData());
-        foreach ($providers as $name => $provider) {
-            $repository->getIO()->writeInfo(sprintf('Downloading packages from %s provider', $name));
-            $this->downloadProviderListings($repository, collect($this->json_decode($provider, true)));
-        }
+        // foreach ($providers as $name => $provider) {
+        //     $repository->getIO()->writeInfo(sprintf('Downloading packages from %s provider', $name));
+        //     $this->downloadProviderListings($repository, collect($this->json_decode($provider, true)));
+        // }
 
         wait(call(function (Repository $repository) {
             // prepare main packages.json
@@ -100,7 +105,7 @@ final class Dumper
             if (true === $exists) {
                 yield unlink($this->publicDir.'/packages.json');
             }
-            yield symlink($repository->getOutputFilePath('packages.json'), $this->publicDir.'/packages.json');
+            yield link($repository->getOutputFilePath('packages.json'), $this->publicDir.'/packages.json');
             $repository->getIO()->writeInfo('Creating symlinks for packages.json');
 
             // symlink provider directory to public
@@ -112,10 +117,14 @@ final class Dumper
                 // do nothing
             }
             if ($link !== $repository->getOutputFilePath('p')) {
-                if (null === $link && true === $exist) {
-                    yield rmdir($this->publicDir.'/p');
+                if (true === $exist) {
+                    if (null === $link) {
+                        yield rmdir($this->publicDir.'/p');
+                    } else {
+                        yield unlink($this->publicDir.'/p');
+                    }
                 }
-                yield symlink($repository->getOutputFilePath('p'), $this->publicDir.'/p');
+                yield link($repository->getOutputFilePath('p'), $this->publicDir.'/p');
                 $repository->getio()->writeinfo('creating symlinks for provider directory');
 
                 yield rmdir($repository->getCacheDir());
@@ -147,7 +156,7 @@ final class Dumper
                 $promises[$filename] = $this->downloadAndSaveFile($repository, $filename);
 
                 // batch processing
-                if (0 === $i++ % 30) {
+                if (0 === $i++ % 35) {
                     wait(all($promises));
                     $promises = [];
                 }
