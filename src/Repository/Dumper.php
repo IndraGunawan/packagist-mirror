@@ -18,7 +18,6 @@ use Amp\Success;
 use Symfony\Component\Console\Output\OutputInterface;
 use Tightenco\Collect\Support\Collection;
 use function Amp\call;
-use function Amp\Promise\wait;
 
 /**
  * @author Indra Gunawan <hello@indra.my.id>
@@ -36,7 +35,8 @@ final class Dumper
 
     public function dump(Repository $repository): void
     {
-        $currentBuildDir = date('Ymd');
+        // only create a new build dir once a month
+        $currentBuildDir = date('Ym');
         $cacheBuildDir = $this->getCacheDir($this->buildDir);
         $cacheBuildDir = preg_replace('/[^0-9A-Za-z]*/', '', $cacheBuildDir);
         $cacheBuildDir = $cacheBuildDir ?: $currentBuildDir;
@@ -58,11 +58,7 @@ final class Dumper
 
             $repository->setPackagesData($this->json_decode(yield $response->getBody(), true));
 
-            $providers = yield $this->downloadProviderListings($repository, $repository->getPackagesData());
-            foreach ($providers as $name => $provider) {
-                $repository->getIO()->writeInfo(sprintf('Downloading packages from %s provider', $name));
-                yield $this->downloadProviderListings($repository, collect($this->json_decode($provider, true)));
-            }
+            yield $this->downloadProviderListings($repository, $repository->getPackagesData());
 
             // prepare main packages.json
             $rootFile = $repository->getPackagesData()->toArray();
@@ -79,29 +75,23 @@ final class Dumper
 
             // symlink packages.json file to public
             $repository->getIO()->writeInfo('Creating symlinks for packages.json');
-            $exists = yield File\isfile($this->publicDir.'/packages.json');
-            if (true === $exists) {
-                yield File\unlink($this->publicDir.'/packages.json');
-            }
+            yield File\unlink($this->publicDir.'/packages.json');
             yield File\link($repository->getOutputFilePath('packages.json'), $this->publicDir.'/packages.json');
 
             // symlink provider directory to public
-            $exist = yield File\isdir($this->publicDir.'/p');
             $link = null;
             try {
                 $link = yield File\readlink($this->publicDir.'/p');
             } catch (FilesystemException $e) {
                 // do nothing
             }
+            $exist = yield File\isdir($this->publicDir.'/p');
             if ($link !== $repository->getOutputFilePath('p')) {
-                if (true === $exist) {
-                    if (null === $link) {
-                        yield $this->removeDirectory($this->publicDir.'/p');
-                    } else {
-                        yield File\unlink($this->publicDir.'/p');
-                    }
+                if (true === $exist && null === $link) {
+                    yield $this->removeDirectory($this->publicDir.'/p');
                 }
                 $repository->getio()->writeinfo('Creating symlinks for provider directory');
+                yield File\unlink($this->publicDir.'/p');
                 yield File\link($repository->getOutputFilePath('p'), $this->publicDir.'/p');
             }
         }, $repository));
@@ -118,8 +108,11 @@ final class Dumper
             if ($repository->getPackagesData()->has('providers-url') && is_array($data->get('provider-includes'))) {
                 foreach ($data->get('provider-includes') as $name => $metadata) {
                     $filename = str_replace('%hash%', $metadata['sha256'], $name);
-
                     $providers[$filename] = $this->downloadAndSaveFile($repository, $filename);
+                }
+                foreach (yield Promise\all($providers) as $filename => $content) {
+                    $repository->getIO()->writeInfo(sprintf('Downloading packages from %s provider', $filename));
+                    yield $this->downloadProviderListings($repository, collect(json_decode($content, true)));
                 }
             } elseif ($repository->getPackagesData()->has('providers-url') && is_array($data->get('providers'))) {
                 $i = 0;
@@ -134,9 +127,15 @@ final class Dumper
                         $providers = [];
                     }
                 }
+            } elseif (is_array($data->get('includes'))) {
+                foreach ($data->get('includes') as $include => $metadata) {
+                    $providers[] = $this->downloadAndSaveFile($repository, $include);
+                }
+                yield Promise\all($providers);
+                $providers = [];
             }
 
-            return yield Promise\all($providers);
+            yield Promise\all($providers);
         }, $repository, $data);
     }
 
@@ -150,7 +149,7 @@ final class Dumper
                     return yield new Success('{}');
                 }
 
-                $repository->getIO()->writeComment(sprintf(' - Moving %s to new directory', $filename), true, OutputInterface::VERBOSITY_DEBUG);
+                $repository->getIO()->writeComment(sprintf(' - Reading %s from cache', $filename), true, OutputInterface::VERBOSITY_DEBUG);
 
                 $content = yield File\get($repository->getCacheFilePath($filename));
                 yield $this->createDirectory($repository->getOutputFileDir($filename));
@@ -183,7 +182,7 @@ final class Dumper
 
     private function removeDirectory(string $directory): Promise
     {
-        return call(function (string $directory) {
+        $promise = call(function (string $directory) {
             if (yield File\isdir($directory)) {
                 foreach (yield File\scandir($directory) as $dir) {
                     yield $this->removeDirectory($directory.'/'.$dir);
@@ -193,6 +192,10 @@ final class Dumper
                 yield File\unlink($directory);
             }
         }, rtrim($directory, '/'));
+
+        clearstatcache();
+
+        return $promise;
     }
 
     private function json_decode(string $json, bool $assoc = false, int $depth = 512, int $options = 0)
@@ -243,11 +246,82 @@ final class Dumper
 
     public function removeOldFiles(Repository $repository): void
     {
-        if ($repository->getCacheDir() === $repository->getOutputDir()) {
-            return;
-        }
+        Promise\wait(call(function (Repository $repository) {
+            if ($repository->getCacheDir() !== $repository->getOutputDir()) {
+                $repository->getio()->writeInfo('Removing old files');
+                $repository->getio()->writeComment(sprintf(' - Removing provider directory %s', $repository->getCacheDir()), true, OutputInterface::VERBOSITY_DEBUG);
+                yield $this->removeDirectory($repository->getCacheDir());
+            } elseif ('00' === date('i')) {
+                // remove outdated files every hour
+                $repository->getio()->writeInfo('Removing old files');
+                $timeToRemove = strtotime('30 minutes ago');
+                $packages = yield $this->loadPackageListings($repository, $repository->getPackagesData()->toArray());
+                $grouped = yield new Success($packages->groupBy(function ($item) {
+                    return substr($item, 0, strrpos($item, '/'));
+                }));
 
-        $repository->getio()->writeInfo('Removing provider directory '.$repository->getCacheDir());
-        wait($this->removeDirectory($repository->getCacheDir()));
+                foreach ($grouped as $path => $filenames) {
+                    $filesToRemove = [];
+                    $filenames = $filenames->mapWithKeys(function ($item) {
+                        $item = substr($item, strrpos($item, '/') + 1);
+
+                        return [explode('$', $item)[0] => $item];
+                    });
+                    $dir = $repository->getOutputFilePath($path);
+
+                    $isDir = yield File\isdir($dir);
+                    if (true === $isDir) {
+                        foreach (yield File\scandir($dir) as $file) {
+                            // check the filename without hash
+                            // if the file with hash is not in current list then may be we can delete the file
+                            if ($filenames->has(explode('$', $file)[0]) && !in_array($file, $filenames->all(), true)) {
+                                $isFile = yield File\isfile($dir.'/'.$file);
+                                if (true === $isFile) {
+                                    $ctime = yield File\ctime($dir.'/'.$file);
+                                    if ($ctime < $timeToRemove) {
+                                        $repository->getio()->writeComment(sprintf(' - Removing provider %s', $dir.'/'.$file), true, OutputInterface::VERBOSITY_DEBUG);
+                                        $filesToRemove[] = File\unlink($dir.'/'.$file);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    yield Promise\all($filesToRemove);
+                }
+                clearstatcache();
+            }
+        }, $repository));
+    }
+
+    /**
+     * Load all providers, used for deleting old message.
+     *
+     * @param Repository $repository
+     * @param array      $data
+     *
+     * @return Collection
+     */
+    public function loadPackageListings(Repository $repository, array $data): Promise
+    {
+        return call(function (Repository $repository, array $data) {
+            if (isset($data['providers'])) {
+                return yield new Success(collect($data['providers'])->map(function ($metadata, $name) use ($repository) {
+                    return str_replace(['%package%', '%hash%'], [$name, $metadata['sha256']], $repository->getPackagesData()->get('providers-url'));
+                })->values());
+            }
+
+            $packages = new Collection();
+            if ($repository->getPackagesData()->has('providers-url') && isset($data['provider-includes'])) {
+                foreach ($data['provider-includes'] as $include => $metadata) {
+                    $filename = str_replace('%hash%', $metadata['sha256'], $include);
+                    $packages->push($filename);
+                    $providers = yield File\get($repository->getOutputFilePath($filename));
+                    $packages = $packages->concat(yield $this->loadPackageListings($repository, json_decode($providers, true)));
+                }
+            }
+
+            return yield new Success($packages);
+        }, $repository, $data);
     }
 }

@@ -91,7 +91,7 @@ final class Repository
 
     public function getCacheFilePath(string $filename): string
     {
-        return $this->getCacheDir().'/'.$filename;
+        return $this->getCacheDir().'/'.ltrim($filename, '/');
     }
 
     public function getCacheFileDir(string $filename): string
@@ -113,7 +113,7 @@ final class Repository
 
     public function getOutputFilePath(string $filename): string
     {
-        return $this->getOutputDir().'/'.$filename;
+        return $this->getOutputDir().'/'.ltrim($filename, '/');
     }
 
     public function getOutputFileDir(string $filename): string
