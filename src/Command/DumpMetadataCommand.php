@@ -9,10 +9,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace App\Command;
+namespace Indragunawan\PackagistMirror\Command;
 
-use App\Repository\Dumper;
-use App\Repository\Repository;
+use Indragunawan\PackagistMirror\Repository\Dumper;
+use Indragunawan\PackagistMirror\Repository\Repository;
 use Symfony\Component\Console\Command\LockableTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;

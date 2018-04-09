@@ -9,11 +9,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace App\Repository;
+namespace Indragunawan\PackagistMirror\Repository;
 
 use Amp\Artax\Client;
 use Amp\Artax\DefaultClient;
-use App\IO\IOInterface;
+use Indragunawan\PackagistMirror\IO\IOInterface;
 use Tightenco\Collect\Support\Collection;
 
 /**

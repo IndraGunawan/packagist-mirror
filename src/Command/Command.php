@@ -9,10 +9,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace App\Command;
+namespace Indragunawan\PackagistMirror\Command;
 
-use App\Application;
-use App\IO\NullIO;
+use Indragunawan\PackagistMirror\Application;
+use Indragunawan\PackagistMirror\IO\NullIO;
 use Symfony\Component\Console\Command\Command as BaseCommand;
 
 /**

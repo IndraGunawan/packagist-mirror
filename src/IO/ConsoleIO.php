@@ -9,7 +9,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace App\IO;
+namespace Indragunawan\PackagistMirror\IO;
 
 use Symfony\Component\Console\Output\OutputInterface;
 

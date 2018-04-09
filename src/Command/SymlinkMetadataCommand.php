@@ -9,12 +9,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace App\Command;
+namespace Indragunawan\PackagistMirror\Command;
 
 use Amp\File;
 use Amp\Promise;
 use Amp\Success;
-use App\IO\IOInterface;
+use Indragunawan\PackagistMirror\IO\IOInterface;
 use Symfony\Component\Console\Command\LockableTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -61,18 +61,20 @@ final class SymlinkMetadataCommand extends Command
             if (null === $dir) {
                 $io->writeInfo('Build directory not found');
 
-                return new Success([]);
+                return yield new Success([]);
             }
-            $buildDir .= '/'.preg_replace('/[^0-9A-Za-z]*/', '', $dir);
+            $buildDir .= '/'.preg_replace('/[^0-9A-Za-z-]*/', '', $dir);
 
             // symlink packages.json file to public
-            if (true === yield File\isfile($buildDir.'/packages.json')) {
+            $isDir = yield File\isfile($buildDir.'/packages.json');
+            if (true === $isDir) {
                 $io->writeInfo('Creating symlinks for packages.json');
                 yield File\unlink($publicDir.'/packages.json');
                 yield File\link($buildDir.'/packages.json', $publicDir.'/packages.json');
             }
 
-            if (true === yield File\isdir($buildDir.'/p')) {
+            $isDir = yield File\isdir($buildDir.'/p');
+            if (true === $isDir) {
                 $io->writeinfo('creating symlinks for provider directory');
                 yield File\unlink($publicDir.'/p');
                 yield File\link($buildDir.'/p', $publicDir.'/p');

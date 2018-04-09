@@ -9,10 +9,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace App;
+namespace Indragunawan\PackagistMirror;
 
-use App\IO\ConsoleIO;
-use App\IO\IOInterface;
+use Indragunawan\PackagistMirror\IO\ConsoleIO;
+use Indragunawan\PackagistMirror\IO\IOInterface;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\Application as BaseApplication;

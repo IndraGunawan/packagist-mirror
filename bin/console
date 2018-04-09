@@ -7,5 +7,5 @@ set_time_limit(0);
 
 require __DIR__.'/../vendor/autoload.php';
 
-$application = new \App\Application();
+$application = new \Indragunawan\PackagistMirror\Application();
 $application->run();

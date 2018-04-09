@@ -9,7 +9,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace App\Repository;
+namespace Indragunawan\PackagistMirror\Repository;
 
 use Amp\File;
 use Amp\File\FilesystemException;
@@ -90,7 +90,7 @@ final class Dumper
                 if (true === $exist && null === $link) {
                     yield $this->removeDirectory($this->publicDir.'/p');
                 }
-                $repository->getio()->writeinfo('Creating symlinks for provider directory');
+                $repository->getIO()->writeinfo('Creating symlinks for provider directory');
                 yield File\unlink($this->publicDir.'/p');
                 yield File\link($repository->getOutputFilePath('p'), $this->publicDir.'/p');
             }
@@ -183,7 +183,8 @@ final class Dumper
     private function removeDirectory(string $directory): Promise
     {
         $promise = call(function (string $directory) {
-            if (yield File\isdir($directory)) {
+            $isDir = yield File\isdir($directory);
+            if (true === $isDir) {
                 foreach (yield File\scandir($directory) as $dir) {
                     yield $this->removeDirectory($directory.'/'.$dir);
                 }
@@ -234,7 +235,7 @@ final class Dumper
                 return yield File\get($buildDir.'/BUILD_DIR');
             }
 
-            return new Success('');
+            return yield new Success('');
         }, $buildDir));
     }
 
@@ -248,12 +249,12 @@ final class Dumper
     {
         Promise\wait(call(function (Repository $repository) {
             if ($repository->getCacheDir() !== $repository->getOutputDir()) {
-                $repository->getio()->writeInfo('Removing old files');
-                $repository->getio()->writeComment(sprintf(' - Removing provider directory %s', $repository->getCacheDir()), true, OutputInterface::VERBOSITY_DEBUG);
+                $repository->getIO()->writeInfo('Removing old files');
+                $repository->getIO()->writeComment(sprintf(' - Removing provider directory %s', $repository->getCacheDir()), true, OutputInterface::VERBOSITY_DEBUG);
                 yield $this->removeDirectory($repository->getCacheDir());
             } elseif ('00' === date('i')) {
                 // remove outdated files every hour
-                $repository->getio()->writeInfo('Removing old files');
+                $repository->getIO()->writeInfo('Removing old files');
                 $timeToRemove = strtotime('30 minutes ago');
                 $packages = yield $this->loadPackageListings($repository, $repository->getPackagesData()->toArray());
                 $grouped = yield new Success($packages->groupBy(function ($item) {
@@ -279,7 +280,7 @@ final class Dumper
                                 if (true === $isFile) {
                                     $ctime = yield File\ctime($dir.'/'.$file);
                                     if ($ctime < $timeToRemove) {
-                                        $repository->getio()->writeComment(sprintf(' - Removing provider %s', $dir.'/'.$file), true, OutputInterface::VERBOSITY_DEBUG);
+                                        $repository->getIO()->writeComment(sprintf(' - Removing provider %s', $dir.'/'.$file), true, OutputInterface::VERBOSITY_DEBUG);
                                         $filesToRemove[] = File\unlink($dir.'/'.$file);
                                     }
                                 }

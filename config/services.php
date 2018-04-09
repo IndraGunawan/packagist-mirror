@@ -22,6 +22,6 @@ $definition
         '$publicDir' => $container->getParameter('app.project_dir').'/public',
     ])
 ;
-$this->registerClasses($definition, 'App\\', '../src/*');
+$this->registerClasses($definition, 'Indragunawan\\PackagistMirror\\', '../src/*');
 
 $container->registerForAutoconfiguration(Command::class)->addTag('console.command');
