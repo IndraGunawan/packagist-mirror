@@ -2,6 +2,6 @@
 /cache/
 /build/
 /public/*
-!/public/index.html
+!/public/index.php
 .php_cs.cache
 /deploy.php
