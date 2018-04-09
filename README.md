@@ -10,6 +10,7 @@ Creates your own packagist.org mirror site.
 2. Install dependencies: `php composer.phar install`
 3. Make a VirtualHost with DocumentRoot pointing to `public/`
 4. If you are using like `deployer` to deploy the project, make sure that you add `build` directory to the shared directory config of your deploy script and run `bin/console app:metadata:symlink` after the deployment is successful.
+5. Change the value of the `$countryName` and `$countryCode` variable at `public/index.php` to make it easier for users to identifyyour mirror site location.
 
 You should now be able to access the site.
 
