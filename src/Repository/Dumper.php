@@ -55,6 +55,9 @@ final class Dumper
             $repository->getIO()->writeComment(sprintf('Downloading %s', $jsonUrl), true, OutputInterface::VERBOSITY_VERBOSE);
 
             $response = yield $repository->getHttpClient()->request($jsonUrl);
+            if (200 !== $response->getStatus()) {
+                return yield new Success(false);
+            }
 
             $repository->setPackagesData($this->json_decode(yield $response->getBody(), true));
 
@@ -160,6 +163,10 @@ final class Dumper
             } else {
                 $repository->getIO()->writeComment(sprintf(' - Downloading %s', $filename), true, OutputInterface::VERBOSITY_DEBUG);
                 $response = yield $repository->getHttpClient()->request($repository->getBaseUrl().'/'.$filename);
+
+                if (200 !== $response->getStatus()) {
+                    return yield new Success('{}');
+                }
 
                 $content = yield $response->getBody();
                 yield $this->createDirectory($repository->getOutputFileDir($filename));

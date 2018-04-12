@@ -71,7 +71,8 @@ final class Repository
                 'Encoding' => 'gzip',
                 'User-Agent' => 'https://github.com/Indragunawan/packagist-mirror',
             ]);
-            $this->httpClient->setOption(Client::OP_TRANSFER_TIMEOUT, 0);
+            // timeout 1 minute
+            $this->httpClient->setOption(Client::OP_TRANSFER_TIMEOUT, 60 * 1000);
         }
 
         return $this->httpClient;
