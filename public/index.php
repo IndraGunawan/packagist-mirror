@@ -13,6 +13,10 @@ declare(strict_types=1);
 $countryName = 'Indonesia';
 // used for flag image
 $countryCode = 'id';
+$lastSync = null;
+if (file_exists(__DIR__.'/packages.json') && false !== ($lastModified = filemtime(__DIR__.'/packages.json'))) {
+    $lastSync = date('r', $lastModified);
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -54,7 +58,11 @@ $countryCode = 'id';
                 <div class="col-sm-12 col-md-12 col-lg-10 col-lg-offset-1">
                     <div class="title">
                         <h1>Packagist Mirror <img src="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.1.0/flags/4x3/<?= $countryCode; ?>.svg" title="<?= $countryName; ?>" alt="<?= $countryName; ?>"/></h1>
-                        <p>Synchronized every 1 minute</p>
+                        <?php if (null !== $lastSync): ?>
+                            <p>Last sync: <?= $lastSync ?> (Synchronized every 1 minute)</p>
+                        <?php else: ?>
+                            <p>Synchronized every 1 minute</p>
+                        <?php endif; ?>
                     </div>
                     <p>
                         This is PHP package repository Packagist.org mirror site.

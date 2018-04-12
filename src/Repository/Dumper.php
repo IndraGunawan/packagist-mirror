@@ -94,6 +94,7 @@ final class Dumper
                 yield File\unlink($this->publicDir.'/p');
                 yield File\link($repository->getOutputFilePath('p'), $this->publicDir.'/p');
             }
+            clearstatcache();
         }, $repository));
 
         Promise\wait(call(function (string $buildDir, string $buildDirValue) {
