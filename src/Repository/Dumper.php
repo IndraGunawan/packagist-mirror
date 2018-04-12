@@ -98,10 +98,12 @@ final class Dumper
                 yield File\link($repository->getOutputFilePath('p'), $this->publicDir.'/p');
             }
             clearstatcache();
+
+            return yield new Success(true);
         }, $repository));
 
         Promise\wait(call(function (string $buildDir, string $buildDirValue) {
-            yield File\put($buildDir.'/BUILD_DIR', $buildDirValue);
+            return yield File\put($buildDir.'/BUILD_DIR', $buildDirValue);
         }, $this->buildDir, $currentBuildDir));
     }
 
