@@ -59,7 +59,7 @@ if (file_exists(__DIR__.'/packages.json') && false !== ($lastModified = filemtim
                     <div class="title">
                         <h1>Packagist Mirror <img src="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.1.0/flags/4x3/<?= $countryCode; ?>.svg" title="<?= $countryName; ?>" alt="<?= $countryName; ?>"/></h1>
                         <?php if (null !== $lastSync): ?>
-                            <p>Last sync: <?= $lastSync ?> (Synchronized every 1 minute)</p>
+                            <p>Last sync: <?= $lastSync; ?> (Synchronized every 1 minute)</p>
                         <?php else: ?>
                             <p>Synchronized every 1 minute</p>
                         <?php endif; ?>

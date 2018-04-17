@@ -68,11 +68,9 @@ final class Repository
         if (null === $this->httpClient) {
             $this->httpClient = new DefaultClient();
             $this->httpClient->setOption(Client::OP_DEFAULT_HEADERS, [
-                'Encoding' => 'gzip',
                 'User-Agent' => 'https://github.com/Indragunawan/packagist-mirror',
             ]);
-            // timeout 1 minute
-            $this->httpClient->setOption(Client::OP_TRANSFER_TIMEOUT, 60 * 1000);
+            $this->httpClient->setOption(Client::OP_TRANSFER_TIMEOUT, 45 * 1000);
         }
 
         return $this->httpClient;

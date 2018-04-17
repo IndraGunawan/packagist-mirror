@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Indragunawan\PackagistMirror\Repository;
 
+use Amp\Artax\Client;
 use Amp\File;
 use Amp\File\FilesystemException;
 use Amp\Promise;
@@ -35,28 +36,29 @@ final class Dumper
 
     public function dump(Repository $repository): void
     {
-        // only create a new build dir once a month
-        $currentBuildDir = date('Ym');
-        $cacheBuildDir = $this->getCacheDir($this->buildDir);
-        $cacheBuildDir = preg_replace('/[^0-9A-Za-z]*/', '', $cacheBuildDir);
-        $cacheBuildDir = $cacheBuildDir ?: $currentBuildDir;
-
-        $repository->setOutputDir($this->buildDir.'/'.$currentBuildDir);
-        $repository->setCacheDir($this->buildDir.'/'.$cacheBuildDir);
-
-        $repository->getIO()->writeInfo(sprintf('Output directory : %s', $repository->getOutputDir()));
-        $repository->getIO()->writeInfo(sprintf('Cache directory  : %s', $repository->getCacheDir()));
-
         Promise\wait(call(function (Repository $repository) {
+            // only create a new build dir once a month
+            $currentBuildDir = date('Ym');
+            $cacheBuildDir = yield $this->getCacheDir($this->buildDir);
+            $cacheBuildDir = preg_replace('/[^0-9A-Za-z]*/', '', $cacheBuildDir);
+            $cacheBuildDir = $cacheBuildDir ?: $currentBuildDir;
+
+            $repository->setOutputDir($this->buildDir.'/'.$currentBuildDir);
+            $repository->setCacheDir($this->buildDir.'/'.$cacheBuildDir);
+
+            $repository->getIO()->writeInfo(sprintf('Output directory : %s', $repository->getOutputDir()));
+            $repository->getIO()->writeInfo(sprintf('Cache directory  : %s', $repository->getCacheDir()));
+
             yield $this->createDirectory($repository->getOutputDir());
 
+            // start downloading
             $repository->getIO()->writeInfo(sprintf('Downloading providers from %s', $repository->getUrl()));
             $jsonUrl = $repository->getPackagesJsonUrl();
-            $repository->getIO()->writeComment(sprintf('Downloading %s', $jsonUrl), true, OutputInterface::VERBOSITY_VERBOSE);
+            $repository->getIO()->writeComment(sprintf('Downloading %s', $jsonUrl), true, OutputInterface::VERBOSITY_NORMAL);
 
             $response = yield $repository->getHttpClient()->request($jsonUrl);
             if (200 !== $response->getStatus()) {
-                return yield new Success(false);
+                return new Success(false);
             }
 
             $repository->setPackagesData($this->json_decode(yield $response->getBody(), true));
@@ -97,14 +99,15 @@ final class Dumper
                 yield File\unlink($this->publicDir.'/p');
                 yield File\link($repository->getOutputFilePath('p'), $this->publicDir.'/p');
             }
+
+            if ($repository->getCacheDir() !== $repository->getOutputDir()) {
+                $repository->getIO()->writeInfo('Writing BUILD_DIR info.');
+                yield File\put($this->buildDir.'/BUILD_DIR', $currentBuildDir);
+            }
             clearstatcache();
 
-            return yield new Success(true);
+            return new Success(true);
         }, $repository));
-
-        Promise\wait(call(function (string $buildDir, string $buildDirValue) {
-            return yield File\put($buildDir.'/BUILD_DIR', $buildDirValue);
-        }, $this->buildDir, $currentBuildDir));
     }
 
     private function downloadProviderListings(Repository $repository, Collection $data): Promise
@@ -152,7 +155,7 @@ final class Dumper
             $exists = yield File\exists($repository->getCacheFilePath($filename));
             if ($exists) {
                 if (false === $loadFromCache && $repository->getOutputDir() === $repository->getCacheDir()) {
-                    return yield new Success('{}');
+                    return new Success('{}');
                 }
 
                 $repository->getIO()->writeComment(sprintf(' - Reading %s from cache', $filename), true, OutputInterface::VERBOSITY_DEBUG);
@@ -167,7 +170,7 @@ final class Dumper
                 $response = yield $repository->getHttpClient()->request($repository->getBaseUrl().'/'.$filename);
 
                 if (200 !== $response->getStatus()) {
-                    return yield new Success('{}');
+                    return new Success('{}');
                 }
 
                 $content = yield $response->getBody();
@@ -233,9 +236,9 @@ final class Dumper
         return $json;
     }
 
-    private function getCacheDir(string $buildDir): string
+    private function getCacheDir(string $buildDir): Promise
     {
-        return Promise\wait(call(function (string $buildDir) {
+        return call(function (string $buildDir) {
             $isDir = yield File\isdir($buildDir);
             if (false === $isDir) {
                 yield File\mkdir($buildDir);
@@ -245,8 +248,8 @@ final class Dumper
                 return yield File\get($buildDir.'/BUILD_DIR');
             }
 
-            return yield new Success('');
-        }, $buildDir));
+            return new Success('');
+        }, $buildDir);
     }
 
     public function isNeedToRemoveOldFiles(Repository $repository): bool
@@ -317,7 +320,7 @@ final class Dumper
     {
         return call(function (Repository $repository, array $data) {
             if (isset($data['providers'])) {
-                return yield new Success(collect($data['providers'])->map(function ($metadata, $name) use ($repository) {
+                return new Success(collect($data['providers'])->map(function ($metadata, $name) use ($repository) {
                     return str_replace(['%package%', '%hash%'], [$name, $metadata['sha256']], $repository->getPackagesData()->get('providers-url'));
                 })->values());
             }
@@ -332,7 +335,7 @@ final class Dumper
                 }
             }
 
-            return yield new Success($packages);
+            return new Success($packages);
         }, $repository, $data);
     }
 }

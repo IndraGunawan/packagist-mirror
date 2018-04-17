@@ -1,7 +1,7 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
     "content-hash": "655782c727817cc60dceb89d376ddaea",
@@ -504,16 +504,16 @@
         },
         {
             "name": "amphp/process",
-            "version": "v0.3.2",
+            "version": "v0.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/process.git",
-                "reference": "239605b2e8a9a7958563119e9b03fdabeb0ad4cc"
+                "reference": "b795d20a7f6d5a0637128a02be613f520f1705fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/process/zipball/239605b2e8a9a7958563119e9b03fdabeb0ad4cc",
-                "reference": "239605b2e8a9a7958563119e9b03fdabeb0ad4cc",
+                "url": "https://api.github.com/repos/amphp/process/zipball/b795d20a7f6d5a0637128a02be613f520f1705fc",
+                "reference": "b795d20a7f6d5a0637128a02be613f520f1705fc",
                 "shasum": ""
             },
             "require": {
@@ -555,7 +555,7 @@
             ],
             "description": "Asynchronous process manager.",
             "homepage": "https://github.com/amphp/process",
-            "time": "2018-03-08T15:09:10+00:00"
+            "time": "2018-04-08T18:55:42+00:00"
         },
         {
             "name": "amphp/socket",
@@ -1508,16 +1508,16 @@
         },
         {
             "name": "tightenco/collect",
-            "version": "v5.6.15",
+            "version": "v5.6.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tightenco/collect.git",
-                "reference": "bf73478a3ff21192fa59cdd36ef6d8778aa2fe4e"
+                "reference": "bd125f5daa58c61a227c8bb700f52b4974d7e297"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tightenco/collect/zipball/bf73478a3ff21192fa59cdd36ef6d8778aa2fe4e",
-                "reference": "bf73478a3ff21192fa59cdd36ef6d8778aa2fe4e",
+                "url": "https://api.github.com/repos/tightenco/collect/zipball/bd125f5daa58c61a227c8bb700f52b4974d7e297",
+                "reference": "bd125f5daa58c61a227c8bb700f52b4974d7e297",
                 "shasum": ""
             },
             "require": {
@@ -1554,7 +1554,7 @@
                 "collection",
                 "laravel"
             ],
-            "time": "2018-03-26T18:56:08+00:00"
+            "time": "2018-04-11T01:47:58+00:00"
         }
     ],
     "packages-dev": [],
