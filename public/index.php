@@ -170,7 +170,7 @@ if (file_exists(__DIR__.'/packages.json') && false !== ($lastModified = filemtim
                     This site offers its services free of charge and only as a mirror site.
                     This site only provides package information / metadata with no distribution
                     file of the packages. All packages metadata files are mirrored from
-                    <a href="//packagist.org">Packagist.org</a>. We do not modify and/or
+                    <a href="//packagist.org">Packagist.org</a>. We do not modify and / or
                     process the JSON files. If there is something wrong, please disable
                     the setting the disable command above and try to refer to the original
                     Packagist.org.
