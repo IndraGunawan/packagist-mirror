@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of IndraGunawan/packagist-mirror.
@@ -9,11 +7,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-// used for title and alt for flag
-$countryName = 'Indonesia';
-// used for flag image
-$countryCode = 'id';
-$lastSync = null;
+// used for title and flag
+$countryName = 'Singapore';
+$countryCode = 'sg';
+$lastSync    = null;
 if (file_exists(__DIR__.'/packages.json') && false !== ($lastModified = filemtime(__DIR__.'/packages.json'))) {
     $lastSync = date('r', $lastModified);
 }
@@ -23,14 +20,13 @@ if (file_exists(__DIR__.'/packages.json') && false !== ($lastModified = filemtim
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
-        <title>Packagist Mirror</title>
-
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/2.3.7/mini-default.min.css" />
+        <title>Packagist Mirror | by Aris Ripandi</title>
+        <link rel="shortcut icon" href="//packagist.org/favicon.ico?v=1532638634" />
+        <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic" />
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/mini.css/2.3.7/mini-default.min.css" />
         <style>
             body { font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }
             .title { text-align: center}
-
             @media screen and (min-width: 768px) {
                 h1 { font-size: 500% }
                 h1 > img { width: 10%; }
@@ -51,6 +47,8 @@ if (file_exists(__DIR__.'/packages.json') && false !== ($lastModified = filemtim
             .bash > span { font-family: monospace, monospace; }
             .img-valign { vertical-align: middle; }
             mark.default { background: rgba(220,220,220,0.75); color: #212121; }
+            a, a:hover {text-decoration: none;}
+            .text-center {text-align: center;}
         </style>
     </head>
     <body>
@@ -58,11 +56,11 @@ if (file_exists(__DIR__.'/packages.json') && false !== ($lastModified = filemtim
             <div class="row">
                 <div class="col-sm-12 col-md-12 col-lg-10 col-lg-offset-1">
                     <div class="title">
-                        <h1>Packagist Mirror <img class="img-valign" src="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.1.0/flags/4x3/<?= $countryCode; ?>.svg" title="<?= $countryName; ?>" alt="<?= $countryName; ?>"/></h1>
+                        <h1>Packagist Mirror <img class="img-valign" src="//cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.1.0/flags/4x3/<?= $countryCode; ?>.svg" title="<?= $countryName; ?>" alt="<?= $countryName; ?>"/></h1>
                         <?php if (null !== $lastSync): ?>
-                            <p>Last sync: <?= $lastSync; ?> (Synchronized every 1 minute)</p>
+                            <p>Last sync: <?= $lastSync; ?> (Synchronized every 1 hour)</p>
                         <?php else: ?>
-                            <p>Synchronized every 1 minute</p>
+                            <p>Synchronized every 1 hour</p>
                         <?php endif; ?>
                     </div>
                     <p>
@@ -82,7 +80,7 @@ if (file_exists(__DIR__.'/packages.json') && false !== ($lastModified = filemtim
                         <div>
                             <p class="bash" >
                                 $ <span id="enablingStep"></span>
-                                <button class="small tertiary ctclipboard" data-clipboard-target="#enablingStep"><img class="clippy" width="13" src="https://cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/svg/clippy.svg" alt="Copy to clipboard"> Copy</button>
+                                <button class="small tertiary ctclipboard" data-clipboard-target="#enablingStep"><img class="clippy" width="13" src="//cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/svg/clippy.svg" alt="Copy to clipboard"> Copy</button>
                             </p>
                         </div>
                         <input type="radio" name="accordion" id="disable"aria-hidden="true">
@@ -90,29 +88,32 @@ if (file_exists(__DIR__.'/packages.json') && false !== ($lastModified = filemtim
                         <div>
                             <p class="bash" >
                                 $ <span id="disablingStep"></span>
-                                <button class="small tertiary ctclipboard" data-clipboard-target="#disablingStep"><img class="clippy" width="13" src="https://cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/svg/clippy.svg" alt="Copy to clipboard"> Copy</button>
+                                <button class="small tertiary ctclipboard" data-clipboard-target="#disablingStep"><img class="clippy" width="13" src="//cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/svg/clippy.svg" alt="Copy to clipboard"> Copy</button>
                             </p>
                         </div>
                     </div>
 
                     <h2>Disclaimer</h2>
                     <p>This site offers its services free of charge and only as a mirror site.</p>
-                    <p>This site only provides package information / metadata with no distribution file of the packages. All packages metadata files are mirrored from <a href="https://packagist.org">Packagist.org</a>. We do not modify and/or process the JSON files. If there is something wrong, please disable the setting the Disable command above and try to refer to the original packagist.org.</p>
+                    <p>This site only provides package information / metadata with no distribution file of the packages. All packages metadata files are mirrored from <a href="//packagist.org">Packagist.org</a>. We do not modify and/or process the JSON files. If there is something wrong, please disable the setting the Disable command above and try to refer to the original packagist.org.</p>
                 </div>
             </div>
         </div>
-        <footer class="row">
+        <footer class="row text-center">
             <div class="col-sm-12 col-md-12 col-lg-10 col-lg-offset-1">
-                <p><b>Packagist Mirror</b> was built from Indonesia by <a href="https://github.com/IndraGunawan">IndraGunawan</a>.</p>
-                <p>It is licensed under the <a href="https://github.com/IndraGunawan/packagist-mirror/blob/master/LICENSE">MIT License</a>. You can view the project's source code on <a href="https://github.com/IndraGunawan/packagist-mirror">GitHub</a>.</p>
+                <p>Packagist Mirror by <a href="//github.com/riipandi">Aris Ripandi</a>.</p>
+				<p>Original code was built from Indonesia by <a href="//github.com/IndraGunawan">IndraGunawan</a>.</p>
+                <p>
+                    Licensed under the <a href="//github.com/riipandi/packagist-mirror/blob/master/LICENSE">MIT License</a>.
+                    Code available at <a href="//github.com/riipandi/packagist-mirror">Github</a>.
+                </p>
             </div>
         </footer>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
         <script>
             // set text of the command
             document.getElementById('enablingStep').innerText = 'composer config -g repos.packagist composer '+ window.location.origin;
             document.getElementById('disablingStep').innerText = 'composer config -g --unset repos.packagist';
-
             new ClipboardJS('.ctclipboard');
         </script>
     </body>
