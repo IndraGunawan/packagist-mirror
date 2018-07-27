@@ -29,5 +29,5 @@ fi
 if [ ! -f "/etc/cron.d/packagist" ]; then
     echo -e "#!/bin/bash" > /etc/cron.d/packagist
     echo -e "0 * * * * $PWD/bin/console app:metadata:dump >/dev/null 2>&1" >> /etc/cron.d/packagist
-    chmod +x /etc/cron.d/packagist
+    chmod a+x /etc/cron.d/packagist
 fi
