@@ -133,8 +133,8 @@ if (file_exists(__DIR__.'/packages.json') && false !== ($lastModified = filemtim
                     bandwidth availaibility as required to meet demand from the Composer
                     user base. This mirror unafiliated with Packagist.org, the further
                     you are from the location of the Packagist.org server, the more time
-                    is needed to download json files. By using mirror, it will help save
-                    the time for downloading because the server location is closer.
+                    is needed to download json files. By using this mirror, it will help
+                    save the time for downloading because the server location is closer.
                 </p>
 
                 <h2>Enable the mirror</h2>
