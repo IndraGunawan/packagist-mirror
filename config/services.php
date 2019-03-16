@@ -20,6 +20,7 @@ $definition
     ->setBindings([
         '$buildDir' => $container->getParameter('app.project_dir').'/build',
         '$publicDir' => $container->getParameter('app.project_dir').'/public',
+        '$url' => 'https://packagist.org'
     ])
 ;
 $this->registerClasses($definition, 'Indragunawan\\PackagistMirror\\', '../src/*');

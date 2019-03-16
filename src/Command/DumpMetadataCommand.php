@@ -16,6 +16,7 @@ use Indragunawan\PackagistMirror\Repository\Repository;
 use Symfony\Component\Console\Command\LockableTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputArgument;
 
 /**
  * @author Indra Gunawan <hello@indra.my.id>
@@ -26,20 +27,24 @@ final class DumpMetadataCommand extends Command
 
     protected static $defaultName = 'app:metadata:dump';
     private $dumper;
+    private $url;
 
-    public function __construct(Dumper $dumper)
+    public function __construct(Dumper $dumper , string $url )
     {
         parent::__construct();
         $this->dumper = $dumper;
+        $this->url = $url;
     }
 
     protected function configure()
     {
+        $this->addArgument('url', InputArgument::OPTIONAL, 'what is the url of the repo you want to mirror ?');
         $this->setDescription('Dump metadata files.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $url = $input->getArgument('url') ? $input->getArgument('url') : $this->url;
         $this->getIO()->writeInfo(sprintf('Start time       : %s', date('c')));
         if (!$this->lock($this->getName().'::dump')) {
             $this->getIO()->writeError('The command is already running in another process.');
@@ -50,7 +55,7 @@ final class DumpMetadataCommand extends Command
         ini_set('memory_limit', '-1');
         gc_enable();
 
-        $repository = new Repository('https://packagist.org', $this->getIO());
+        $repository = new Repository($url, $this->getIO());
         // dump and symlink packages metadata
         $this->dumper->dump($repository);
 
