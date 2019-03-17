@@ -38,13 +38,13 @@ final class DumpMetadataCommand extends Command
 
     protected function configure()
     {
-        $this->addArgument('url', InputArgument::OPTIONAL, 'what is the url of the repo you want to mirror ?');
+        $this->addArgument('url', InputArgument::OPTIONAL, 'what is the url of the repo you want to mirror ?', $this->url);
         $this->setDescription('Dump metadata files.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $url = $input->getArgument('url') ? $input->getArgument('url') : $this->url;
+        $url = $input->getArgument('url');
         $this->getIO()->writeInfo(sprintf('Start time       : %s', date('c')));
         if (!$this->lock($this->getName().'::dump')) {
             $this->getIO()->writeError('The command is already running in another process.');
