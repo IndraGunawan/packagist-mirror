@@ -50,6 +50,7 @@ if (file_exists(__DIR__.'/packages.json') && false !== ($lastModified = filemtim
             }
             .bash > span { font-family: monospace, monospace; }
             .img-valign { vertical-align: middle; }
+            .flag-shadow { box-shadow: 2px 4px 8px #dfdfdf; }
             mark.default { background: rgba(220,220,220,0.75); color: #212121; }
         </style>
     </head>
@@ -58,7 +59,7 @@ if (file_exists(__DIR__.'/packages.json') && false !== ($lastModified = filemtim
             <div class="row">
                 <div class="col-sm-12 col-md-12 col-lg-10 col-lg-offset-1">
                     <div class="title">
-                        <h1>Packagist Mirror <img class="img-valign" src="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.1.0/flags/4x3/<?= $countryCode; ?>.svg" title="<?= $countryName; ?>" alt="<?= $countryName; ?>"/></h1>
+                        <h1>Packagist Mirror <img class="img-valign flag-shadow" src="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.1.0/flags/4x3/<?= $countryCode; ?>.svg" title="<?= $countryName; ?>" alt="<?= $countryName; ?>"/></h1>
                         <?php if (null !== $lastSync): ?>
                             <p>Last sync: <?= $lastSync; ?> (Synchronized every 1 minute)</p>
                         <?php else: ?>
